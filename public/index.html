@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FB Guard On</title>
+  <style>
+    :root {
+      --primary: #1877f2;
+      --success: #42b72a;
+      --danger: #f02849;
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --text: #1c1e21;
+      --text-secondary: #65676b;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+    }
+    
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    h1 {
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #dddfe2;
+      border-radius: 6px;
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-activate {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .btn-deactivate {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    button:hover {
+      opacity: 0.9;
+    }
+    
+    #status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+    
+    .status-success {
+      background-color: rgba(66, 183, 42, 0.2);
+      color: var(--success);
+    }
+    
+    .status-error {
+      background-color: rgba(240, 40, 73, 0.2);
+      color: var(--danger);
+    }
+    
+    .how-to {
+      margin-top: 30px;
+      text-align: left;
+    }
+    
+    .how-to h3 {
+      color: var(--primary);
+    }
+    
+    .how-to ol {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>FB Guard On</h1>
+      <p class="subtitle">Protect your Facebook profile from unauthorized access</p>
+      
+      <div class="form-group">
+        <label for="appstate">Facebook Appstate:</label>
+        <textarea id="appstate" placeholder="Paste your Facebook appstate here..."></textarea>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn-activate" onclick="activateGuard()">Activate Protection</button>
+        <button class="btn-deactivate" onclick="deactivateGuard()">Deactivate Protection</button>
+      </div>
+      
+      <div id="status"></div>
+      
+      <div class="how-to">
+        <h3>How to get your Facebook Appstate:</h3>
+        <ol>
+          <li>Use a browser extension or tool to extract your Facebook cookies</li>
+          <li>Convert the cookies to appstate format (JSON array)</li>
+          <li>Paste the entire appstate in the field above</li>
+        </ol>
+        <p><strong>Note:</strong> Your appstate is only used to protect your account and is not stored on our servers.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function activateGuard() {
+      await toggleGuard('activate');
+    }
+    
+    async function deactivateGuard() {
+      await toggleGuard('deactivate');
+    }
+    
+    async function toggleGuard(action) {
+      const appstate = document.getElementById('appstate').value.trim();
+      const statusEl = document.getElementById('status');
+      
+      if (!appstate) {
+        showStatus('Please enter your Facebook appstate', 'error');
+        return;
+      }
+      
+      try {
+        showStatus(`Processing... ${action === 'activate' ? 'Activating' : 'Deactivating'} FB Guard`, 'info');
+        
+        const response = await fetch('/api/guard', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            cookie: appstate,
+            action: action
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          showStatus(data.message, 'success');
+        } else {
+          showStatus(data.error || 'An error occurred', 'error');
+        }
+      } catch (err) {
+        showStatus('Network error. Please try again.', 'error');
+        console.error(err);
+      }
+    }
+    
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = '';
+      statusEl.classList.add(`status-${type}`);
+      statusEl.style.display = 'block';
+    }
+  </script>
+</body>
+  </html>
